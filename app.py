@@ -212,8 +212,8 @@ if st.button("Spočítat kalorický plán"):
     bmr_lbm = 370 + (21.6 * lean_mass)
     ffmi = lean_mass / ((height/100) ** 2)
 
-    st.write(f"BMR dle LBM: {bmr_lbm:.0f} kcal")
-    st.write(f"FFMI: {ffmi:.1f}")
+    st.write(f"BMR dle LBM (bazální metabolismus vypočtený z beztukové hmoty): {bmr_lbm:.0f} kcal")
+    st.write(f"FFMI (Fat Free Mass Index – index beztukové hmoty): {ffmi:.1f}")
     st.write(f"Odhad změny tukové hmoty / týden: {predicted_fat_change:.2f} kg")
 
     st.divider()

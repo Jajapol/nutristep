@@ -173,3 +173,46 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
+
+    # ======================================
+    # ODBORNÁ ANALÝZA
+    # ======================================
+
+    st.divider()
+    st.subheader("Odborná analýza")
+
+    if goal != "Udržování":
+        percent_deficit = (adjustment / tdee) * 100 if tdee != 0 else 0
+        st.write(f"Procentuální změna: {percent_deficit:.1f} % z TDEE")
+
+        if percent_deficit <= 15:
+            st.success("Jedná se o mírnou a dlouhodobě udržitelnou redukci.")
+        elif percent_deficit <= 25:
+            st.warning("Jedná se o standardní redukční nastavení.")
+        else:
+            st.error("Jedná se o agresivní redukci – zvažte úpravu.")
+
+    # ======================================
+    # EDUKATIVNÍ SEKCE
+    # ======================================
+
+    st.divider()
+    st.subheader("Jak číst tento výsledek")
+
+    st.markdown("""
+**BMR (Bazální metabolismus)**  
+Energie potřebná pro základní životní funkce v klidu.
+
+**TDEE (Celkový denní výdej energie)**  
+Součet BMR, fyzické aktivity a energie potřebné na trávení (TEF).
+
+**TEF (Thermic Effect of Food)**  
+Přibližně 10 % denního energetického výdeje.
+
+**Makroživiny**
+- Bílkoviny pomáhají udržet svalovou hmotu.
+- Tuky jsou fixně nastaveny na 30 %.
+- Sacharidy doplňují zbytek energie.
+
+Dlouhodobá redukce by neměla přesahovat 1 % tělesné hmotnosti týdně.
+""")

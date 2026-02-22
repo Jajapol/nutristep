@@ -110,6 +110,37 @@ else:
 st.divider()
 
 # ======================================
+# TĚLESNÉ SLOŽENÍ
+# ======================================
+
+st.subheader("Způsob zadání tělesného složení")
+
+body_mode = st.radio("", ["Automatický výpočet tuku", "Zadat % tuku ručně"])
+
+if body_mode == "Zadat % tuku ručně":
+    body_fat = st.number_input("Tělesný tuk (%)", 3.0, 60.0, 20.0)
+else:
+    height_m = height / 100
+    bmi = weight / (height_m ** 2)
+    gender_val = 1 if gender == "Muž" else 0
+    body_fat = (1.20 * bmi) + (0.23 * age) - (10.8 * gender_val) - 5.4
+
+fat_mass = weight * (body_fat / 100)
+lean_mass_auto = weight - fat_mass
+
+lbm_mode = st.radio("Beztuková hmota (LBM)",
+                    ["Vypočítat automaticky", "Zadat ručně (kg)"])
+
+if lbm_mode == "Zadat ručně (kg)":
+    lean_mass = st.number_input("Beztuková hmota (kg)", 20.0, weight, lean_mass_auto)
+else:
+    lean_mass = lean_mass_auto
+
+muscle_mass = st.number_input("Svalová hmota (kg) – volitelné", 0.0, weight, 0.0)
+
+st.divider()
+
+# ======================================
 # CÍL
 # ======================================
 
@@ -154,6 +185,7 @@ if st.button("Spočítat kalorický plán"):
 
     change_4_weeks = predicted_weight_change * 4
     change_12_weeks = predicted_weight_change * 12
+    predicted_fat_change = predicted_weight_change * 0.8
 
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
@@ -167,50 +199,29 @@ if st.button("Spočítat kalorický plán"):
 
     st.divider()
 
-    # ======================================
-    # TĚLESNÉ SLOŽENÍ
-    # ======================================
-
-    height_m = height / 100
-    bmi = weight / (height_m ** 2)
-    gender_val = 1 if gender == "Muž" else 0
-
-    body_fat = (1.20 * bmi) + (0.23 * age) - (10.8 * gender_val) - 5.4
-    fat_mass = weight * (body_fat / 100)
-    lean_mass = weight - fat_mass
-
     st.subheader("Tělesné složení")
-    st.markdown("**Jedná se pouze o orientační výpočet tělesného tuku (statistický model).**")
+    st.markdown("**Jedná se pouze o orientační výpočet tělesného tuku (pokud nebyl zadán ručně).**")
 
-    st.write(f"BMI: {bmi:.1f}")
     st.write(f"Odhad tělesného tuku: {body_fat:.1f} %")
     st.write(f"Tuková hmota: {fat_mass:.1f} kg")
     st.write(f"Beztuková hmota: {lean_mass:.1f} kg")
 
-    # BMR dle LBM
+    if muscle_mass > 0:
+        st.write(f"Svalová hmota (zadáno): {muscle_mass:.1f} kg")
+
     bmr_lbm = 370 + (21.6 * lean_mass)
-    st.write(f"BMR dle beztukové hmoty: {bmr_lbm:.0f} kcal")
+    ffmi = lean_mass / ((height/100) ** 2)
 
-    # FFMI
-    ffmi = lean_mass / (height_m ** 2)
+    st.write(f"BMR dle LBM: {bmr_lbm:.0f} kcal")
     st.write(f"FFMI: {ffmi:.1f}")
-
-    # Predikce změny tuku
-    predicted_fat_change = predicted_weight_change * 0.8
     st.write(f"Odhad změny tukové hmoty / týden: {predicted_fat_change:.2f} kg")
 
     st.divider()
 
-    # ======================================
-    # MAKRA
-    # ======================================
-
     fat_kcal = target * 0.30
     fat_g = fat_kcal / 9
-
     protein_g = weight * protein_per_kg
     protein_kcal = protein_g * 4
-
     remaining_kcal = target - (fat_kcal + protein_kcal)
 
     if remaining_kcal < 0:
@@ -225,9 +236,8 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
-
-    st.write(f"Cukry (maximální hodnota): {sugar_max:.0f} g")
-    st.write(f"Nasycené MK (max 10 % z celkového příjmu): {saturated_max:.0f} g")
+    st.write(f"Cukry (max): {sugar_max:.0f} g")
+    st.write(f"Nasycené MK (max 10 % příjmu): {saturated_max:.0f} g")
     st.write("Vláknina: 25–35 g denně")
 
     st.divider()
@@ -235,8 +245,7 @@ if st.button("Spočítat kalorický plán"):
     st.subheader("Motivační shrnutí")
     st.markdown("""
 Tento plán představuje realistický a dlouhodobě udržitelný přístup.  
-Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu.  
-Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
+Klíčem k úspěchu je konzistence, pravidelnost a dlouhodobá strategie.
 """)
 
     st.info("Tato kalkulačka je orientační nástroj.")
@@ -256,13 +265,12 @@ with st.form("contact_form"):
     message_text = st.text_area("Vaše zpráva / cíl", height=120)
     submitted = st.form_submit_button("Mám zájem o spolupráci")
 
-    if submitted:
-        if name and email:
-            try:
-                sender = st.secrets["EMAIL_ADDRESS"]
-                password = st.secrets["EMAIL_PASSWORD"]
+    if submitted and name and email:
+        try:
+            sender = st.secrets["EMAIL_ADDRESS"]
+            password = st.secrets["EMAIL_PASSWORD"]
 
-                message = f"""
+            message = f"""
 Nová poptávka z NutriStep
 
 Jméno: {name}
@@ -273,20 +281,18 @@ Zpráva:
 {message_text}
 """
 
-                msg = MIMEText(message)
-                msg["Subject"] = "Nová poptávka z NutriStep"
-                msg["From"] = sender
-                msg["To"] = "pridal.jaroslav@icloud.com"
+            msg = MIMEText(message)
+            msg["Subject"] = "Nová poptávka z NutriStep"
+            msg["From"] = sender
+            msg["To"] = "pridal.jaroslav@icloud.com"
 
-                server = smtplib.SMTP_SSL("smtp.mail.me.com", 465)
-                server.login(sender, password)
-                server.sendmail(sender, "pridal.jaroslav@icloud.com", msg.as_string())
-                server.quit()
+            server = smtplib.SMTP_SSL("smtp.mail.me.com", 465)
+            server.login(sender, password)
+            server.sendmail(sender, "pridal.jaroslav@icloud.com", msg.as_string())
+            server.quit()
 
-                st.success("Děkuji, brzy se vám ozvu.")
-            except Exception:
-                st.error("Došlo k chybě při odesílání.")
-        else:
-            st.warning("Vyplňte prosím jméno a email.")
+            st.success("Děkuji, brzy se vám ozvu.")
+        except:
+            st.error("Došlo k chybě při odesílání.")
 
 st.caption("Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem kontaktování.")

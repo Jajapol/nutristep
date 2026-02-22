@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 
 # ======================================
-# Nastavení stránky
+# Nastavení stránky + vizuální styl
 # ======================================
 
 st.set_page_config(page_title="NutriStep", layout="centered")
@@ -32,7 +32,7 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # ======================================
-# BRANDING FIRMY
+# Branding
 # ======================================
 
 st.title("NutriStep – Řízené hubnutí s daty")
@@ -67,7 +67,7 @@ def calculate_bmr(weight, height, age, gender):
 
 
 # ======================================
-# VSTUPY
+# Vstupy
 # ======================================
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
@@ -88,7 +88,7 @@ else:
 st.divider()
 
 # ======================================
-# AKTIVITA
+# Aktivita
 # ======================================
 
 st.subheader("Způsob zadání aktivity")
@@ -107,11 +107,7 @@ if activity_mode == "Paušální faktor aktivity":
         "Vysoká aktivita (1.725)": 1.725
     }
 
-    selected_activity = st.selectbox(
-        "Faktor aktivity",
-        list(activity_options.keys())
-    )
-
+    selected_activity = st.selectbox("Faktor aktivity", list(activity_options.keys()))
     activity_factor = activity_options[selected_activity]
     weekly_active_calories = None
 
@@ -125,7 +121,7 @@ else:
 st.divider()
 
 # ======================================
-# CÍL
+# Cíl
 # ======================================
 
 goal = st.selectbox("Cíl", ["Redukce", "Udržování", "Nárůst"])
@@ -141,7 +137,7 @@ protein_per_kg = st.number_input("Bílkoviny (g/kg)", 0.5, 3.5, 1.8)
 st.divider()
 
 # ======================================
-# VÝPOČET
+# Výpočet
 # ======================================
 
 if st.button("Spočítat kalorický plán"):
@@ -172,9 +168,13 @@ if st.button("Spočítat kalorický plán"):
     predicted_weight_change = weekly_energy_change / 7700
     weekly_percent_weight_change = (predicted_weight_change / weight) * 100
 
+    if goal != "Udržování" and weekly_percent_weight_change > 1:
+        st.warning("Změna přesahuje 1 % tělesné hmotnosti týdně.")
+
     change_4_weeks = predicted_weight_change * 4
     change_12_weeks = predicted_weight_change * 12
 
+    # Rozpad výdeje
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
     st.write(f"Aktivita: {activity_daily:.0f} kcal")
@@ -183,6 +183,7 @@ if st.button("Spočítat kalorický plán"):
 
     st.divider()
 
+    # Výsledky
     st.subheader("Výsledky")
     st.write(f"Doporučený denní příjem: {target:.0f} kcal")
 
@@ -193,14 +194,50 @@ if st.button("Spočítat kalorický plán"):
 
     st.divider()
 
+    # Makra
     st.subheader("Makroživiny")
 
     fat_kcal = target * 0.30
     fat_g = fat_kcal / 9
     protein_g = weight * protein_per_kg
     protein_kcal = protein_g * 4
-    carbs_g = (target - fat_kcal - protein_kcal) / 4
+    remaining_kcal = target - (fat_kcal + protein_kcal)
+
+    if remaining_kcal < 0:
+        st.error("Příliš vysoké množství bílkovin.")
+        st.stop()
+
+    carbs_g = remaining_kcal / 4
 
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
+
+    st.divider()
+
+    # Odborná analýza
+    st.subheader("Odborná analýza")
+
+    if goal != "Udržování":
+        percent_deficit = (adjustment / tdee) * 100 if tdee != 0 else 0
+        st.write(f"Procentuální změna: {percent_deficit:.1f} % z TDEE")
+
+        if percent_deficit <= 15:
+            st.success("Mírná a dlouhodobě udržitelná redukce.")
+        elif percent_deficit <= 25:
+            st.success("Standardní a efektivní redukce.")
+        else:
+            st.warning("Agresivní nastavení – zvažte úpravu.")
+
+    st.divider()
+
+    # Edukativní sekce
+    st.subheader("Jak číst tento výsledek")
+
+    st.markdown("""
+**BMR** – energie potřebná pro základní životní funkce.  
+**TDEE** – celkový denní energetický výdej (BMR + aktivita + TEF).  
+**TEF** – energie potřebná na trávení (cca 10 %).  
+
+Dlouhodobá redukce by neměla přesahovat 1 % tělesné hmotnosti týdně.
+""")

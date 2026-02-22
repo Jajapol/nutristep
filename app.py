@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 # ======================================
 # NutriStep – Profesionální kalkulačka
@@ -7,7 +8,7 @@ import streamlit as st
 
 st.set_page_config(page_title="NutriStep – Kalorické výpočty", layout="centered")
 
-# Skrytí menu
+# Skrytí Streamlit menu
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -15,7 +16,6 @@ footer {visibility: hidden;}
 header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
-
 
 # ======================================
 # Funkce
@@ -121,52 +121,46 @@ if st.button("Spočítat kalorický plán"):
     KCAL_CARBS = 4
     KCAL_FAT = 9
 
-    # --- Výpočet základního výdeje ---
+    # Výpočet základního výdeje
     if activity_mode == "Aktivní kalorie za 7 dní":
         weekly_base = (bmr * 7) + weekly_active_calories
         daily_base = weekly_base / 7
+        activity_daily = weekly_active_calories / 7
     else:
         daily_base = bmr * activity_factor
+        activity_daily = daily_base - bmr
 
     # Přičtení TEF
     tdee = daily_base / 0.90
     weekly_tdee = tdee * 7
     tef_daily = tdee * 0.10
 
-    # --- Úprava dle cíle ---
+    # Úprava dle cíle
     if goal == "Redukce hmotnosti":
         target_calories = tdee - adjustment
         weekly_energy_change = adjustment * 7
         percent_change = (adjustment / tdee) * 100
-
     elif goal == "Nárůst hmotnosti":
         target_calories = tdee + adjustment
         weekly_energy_change = adjustment * 7
         percent_change = (adjustment / tdee) * 100
-
     else:
         target_calories = tdee
         weekly_energy_change = 0
         percent_change = 0
 
-    # Ochrana pod BMR
     if target_calories < bmr:
         st.error("Nelze nastavit příjem pod hodnotu BMR.")
         st.stop()
 
-    # --- Změna hmotnosti ---
     predicted_weight_change = weekly_energy_change / 7700
     weekly_percent_weight_change = (predicted_weight_change / weight) * 100
 
-    # Kontrola 1 % týdně
-    if goal == "Redukce hmotnosti":
+    if goal != "Udržování hmotnosti":
         if weekly_percent_weight_change > 1:
-            st.error("Plánovaný úbytek přesahuje 1 % tělesné hmotnosti týdně.")
-    elif goal == "Nárůst hmotnosti":
-        if weekly_percent_weight_change > 1:
-            st.warning("Plánovaný nárůst přesahuje 1 % tělesné hmotnosti týdně.")
+            st.error("Změna přesahuje 1 % tělesné hmotnosti týdně.")
 
-    # --- Makra ---
+    # Makra
     fat_kcal = target_calories * 0.30
     fat_g = fat_kcal / KCAL_FAT
 
@@ -191,7 +185,7 @@ if st.button("Spočítat kalorický plán"):
 
     st.subheader("Energetický výdej")
     st.write(f"TDEE: {tdee:.0f} kcal")
-    st.write(f"Denní TEF: {tef_daily:.0f} kcal")
+    st.write(f"TEF: {tef_daily:.0f} kcal")
 
     st.divider()
 
@@ -199,10 +193,9 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Doporučený denní příjem: {target_calories:.0f} kcal")
 
     if goal != "Udržování hmotnosti":
-        st.write(f"Týdenní změna energie: {weekly_energy_change:.0f} kcal")
-        st.write(f"Odhad změny hmotnosti: {predicted_weight_change:.2f} kg / týden")
-        st.write(f"To odpovídá {weekly_percent_weight_change:.2f} % tělesné hmotnosti týdně")
-        st.write(f"Procentuální změna: {percent_change:.1f} % z TDEE")
+        st.write(f"Odhad změny: {predicted_weight_change:.2f} kg / týden")
+        st.write(f"{weekly_percent_weight_change:.2f} % tělesné hmotnosti týdně")
+        st.write(f"{percent_change:.1f} % z TDEE")
 
     st.divider()
 
@@ -210,3 +203,34 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Bílkoviny: {protein_g:.0f} g ({protein_percent:.1f} %)")
     st.write(f"Tuky: {fat_g:.0f} g ({fat_percent:.0f} %)")
     st.write(f"Sacharidy: {carbs_g:.0f} g ({carbs_percent:.1f} %)")
+
+    st.divider()
+    st.subheader("Vizualizace")
+
+    # Projekce hmotnosti
+    if goal != "Udržování hmotnosti":
+        weeks = [0, 1, 2, 3, 4]
+        weights_projection = [
+            weight + (predicted_weight_change * i if goal == "Nárůst hmotnosti"
+                      else -predicted_weight_change * i)
+            for i in weeks
+        ]
+        df_weight = pd.DataFrame({
+            "Týden": weeks,
+            "Hmotnost (kg)": weights_projection
+        })
+        st.line_chart(df_weight.set_index("Týden"))
+
+    # Makra graf
+    macro_df = pd.DataFrame({
+        "Makroživina": ["Bílkoviny", "Tuky", "Sacharidy"],
+        "Kalorie": [protein_kcal, fat_kcal, remaining_kcal]
+    })
+    st.bar_chart(macro_df.set_index("Makroživina"))
+
+    # Rozpad výdeje
+    expenditure_df = pd.DataFrame({
+        "Složka": ["BMR", "Aktivita", "TEF"],
+        "Kalorie": [bmr, activity_daily, tef_daily]
+    })
+    st.bar_chart(expenditure_df.set_index("Složka"))

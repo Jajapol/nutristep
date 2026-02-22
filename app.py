@@ -207,7 +207,10 @@ if st.button("Spočítat kalorický plán"):
     carbs_g = remaining_kcal / 4
 
     sugar_max_g = carbs_g * 0.10
-    saturated_fat_max_g = fat_g * 0.10
+
+    # OPRAVA NMK – 10 % z celkového příjmu
+    saturated_fat_max_kcal = target * 0.10
+    saturated_fat_max_g = saturated_fat_max_kcal / 9
 
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")

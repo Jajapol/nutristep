@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+import os
 
 # ======================================
 # Nastavení stránky + vizuální styl
@@ -9,12 +10,8 @@ st.set_page_config(page_title="NutriStep", layout="centered")
 
 st.markdown("""
 <style>
-body {
-    background-color: #F4F6F9;
-}
-h1, h2, h3 {
-    color: #1F2A44;
-}
+body {background-color: #F4F6F9;}
+h1, h2, h3 {color: #1F2A44;}
 .stButton>button {
     background-color: #1F2A44;
     color: white;
@@ -22,9 +19,7 @@ h1, h2, h3 {
     padding: 0.5rem 1rem;
     border: none;
 }
-.stButton>button:hover {
-    background-color: #162033;
-}
+.stButton>button:hover {background-color: #162033;}
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
@@ -32,7 +27,7 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # ======================================
-# Branding s logem vpravo
+# Branding + Logo
 # ======================================
 
 col1, col2 = st.columns([3, 2])
@@ -42,15 +37,16 @@ with col1:
     st.subheader("NutriStep - Mgr. Jaroslav Přidal")
 
     st.markdown("""
-    **Provozovatel:** NutriStep - Mgr. Jaroslav Přidal  
-    **IČO:** 24012289  
-    **Sídlo podnikání:** Budovatelů 173/7, Přerov  
-    **Telefon:** 773 699 937  
-    **E-mail:** pridal.jaroslav@icloud.com  
-    """)
+**Provozovatel:** NutriStep - Mgr. Jaroslav Přidal  
+**IČO:** 24012289  
+**Sídlo podnikání:** Budovatelů 173/7, Přerov  
+**Telefon:** 773 699 937  
+**E-mail:** pridal.jaroslav@icloud.com  
+""")
 
 with col2:
-    st.image("logo.png", use_column_width=True)
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=240)
 
 st.caption(f"Aktuální datum: {datetime.now().strftime('%d.%m.%Y')}")
 
@@ -71,9 +67,8 @@ def calculate_bmr(weight, height, age, gender):
     else:
         return (10 * weight) + (6.25 * height) - (5 * age) - 161
 
-
 # ======================================
-# Vstupy
+# VSTUPY
 # ======================================
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
@@ -94,7 +89,7 @@ else:
 st.divider()
 
 # ======================================
-# Aktivita
+# AKTIVITA
 # ======================================
 
 st.subheader("Způsob zadání aktivity")
@@ -124,7 +119,7 @@ else:
 st.divider()
 
 # ======================================
-# Cíl
+# CÍL
 # ======================================
 
 goal = st.selectbox("Cíl", ["Redukce", "Udržování", "Nárůst"])
@@ -140,7 +135,7 @@ protein_per_kg = st.number_input("Bílkoviny (g/kg)", 0.5, 3.5, 1.8)
 st.divider()
 
 # ======================================
-# Výpočet (NEZMĚNĚN)
+# VÝPOČET
 # ======================================
 
 if st.button("Spočítat kalorický plán"):
@@ -177,6 +172,10 @@ if st.button("Spočítat kalorický plán"):
     change_4_weeks = predicted_weight_change * 4
     change_12_weeks = predicted_weight_change * 12
 
+    # ======================================
+    # ROZPAD VÝDEJE
+    # ======================================
+
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
     st.write(f"Aktivita: {activity_daily:.0f} kcal")
@@ -184,6 +183,10 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Celkový TDEE: {tdee:.0f} kcal")
 
     st.divider()
+
+    # ======================================
+    # VÝSLEDKY
+    # ======================================
 
     st.subheader("Výsledky")
     st.write(f"Doporučený denní příjem: {target:.0f} kcal")
@@ -194,6 +197,10 @@ if st.button("Spočítat kalorický plán"):
         st.write(f"Odhad za 12 týdnů: {change_12_weeks:.2f} kg")
 
     st.divider()
+
+    # ======================================
+    # MAKROŽIVINY
+    # ======================================
 
     st.subheader("Makroživiny")
 
@@ -212,3 +219,37 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
+
+    st.divider()
+
+    # ======================================
+    # ODBORNÁ ANALÝZA
+    # ======================================
+
+    st.subheader("Odborná analýza")
+
+    if goal != "Udržování":
+        percent_deficit = (adjustment / tdee) * 100 if tdee != 0 else 0
+        st.write(f"Procentuální změna: {percent_deficit:.1f} % z TDEE")
+
+        if percent_deficit <= 15:
+            st.success("Mírná a dlouhodobě udržitelná redukce.")
+        elif percent_deficit <= 25:
+            st.success("Standardní a efektivní redukce.")
+        else:
+            st.warning("Agresivní nastavení – zvažte úpravu.")
+
+    st.divider()
+
+    # ======================================
+    # MOTIVAČNÍ SHRNUTÍ
+    # ======================================
+
+    st.subheader("Motivační shrnutí")
+
+    st.markdown("""
+Tento plán představuje realistický a dlouhodobě udržitelný přístup.  
+Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu.  
+
+Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
+""")

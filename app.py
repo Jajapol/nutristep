@@ -59,7 +59,7 @@ Každý plán vychází z individuálního výpočtu.*
 st.divider()
 
 # ======================================
-# BMR FUNKCE
+# BMR
 # ======================================
 
 def calculate_bmr(weight, height, age, gender):
@@ -67,10 +67,6 @@ def calculate_bmr(weight, height, age, gender):
         return (10 * weight) + (6.25 * height) - (5 * age) + 5
     else:
         return (10 * weight) + (6.25 * height) - (5 * age) - 161
-
-# ======================================
-# VSTUPY
-# ======================================
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
 age = st.number_input("Věk (roky)", 10, 100, 30)
@@ -91,18 +87,20 @@ st.divider()
 # AKTIVITA
 # ======================================
 
-activity_mode = st.radio("Způsob zadání aktivity:",
-    ["Paušální faktor aktivity", "Ruční zadání aktivních kalorií (7 dní)"])
+activity_mode = st.radio(
+    "Způsob zadání aktivity:",
+    ["Paušální faktor aktivity", "Ruční zadání aktivních kalorií (7 dní)"]
+)
 
 if activity_mode == "Paušální faktor aktivity":
-    activity_options = {
+    factors = {
         "Sedavý (1.2)": 1.2,
         "Lehká aktivita (1.375)": 1.375,
         "Střední aktivita (1.55)": 1.55,
         "Vysoká aktivita (1.725)": 1.725
     }
-    selected = st.selectbox("Faktor aktivity", list(activity_options.keys()))
-    tdee_base = bmr * activity_options[selected]
+    selected = st.selectbox("Faktor aktivity", list(factors.keys()))
+    tdee_base = bmr * factors[selected]
 else:
     weekly_active = st.number_input("Součet aktivních kalorií za 7 dní", 0.0, 30000.0, 2500.0)
     tdee_base = bmr + (weekly_active / 7)
@@ -176,8 +174,8 @@ if st.button("Spočítat kalorický plán"):
         st.error("Nelze nastavit příjem pod hodnotu BMR.")
         st.stop()
 
-    weekly_energy_change = adjustment * 7 if goal != "Udržování" else 0
-    predicted_weight_change = weekly_energy_change / 7700
+    weekly_change = adjustment * 7 if goal != "Udržování" else 0
+    predicted_weight_change = weekly_change / 7700
     weekly_percent_change = (predicted_weight_change / weight) * 100
 
     if goal != "Udržování" and weekly_percent_change > 1:
@@ -245,13 +243,13 @@ if st.button("Spočítat kalorický plán"):
     st.subheader("Motivační shrnutí")
     st.markdown("""
 Tento plán představuje realistický a dlouhodobě udržitelný přístup.  
-Klíčem k úspěchu je konzistence, pravidelnost a dlouhodobá strategie.
+Klíčem k úspěchu je konzistence a dlouhodobá strategie.
 """)
 
     st.info("Tato kalkulačka je orientační nástroj.")
 
 # ======================================
-# KONTAKTNÍ FORMULÁŘ
+# KONTAKTNÍ FORMULÁŘ (STABILNÍ VERZE)
 # ======================================
 
 st.divider()
@@ -273,7 +271,7 @@ if submitted:
             sender = st.secrets["EMAIL_ADDRESS"]
             password = st.secrets["EMAIL_PASSWORD"]
 
-            message = f"""
+            body = f"""
 Nová poptávka z NutriStep
 
 Jméno: {name}
@@ -284,19 +282,19 @@ Zpráva:
 {message_text}
 """
 
-            msg = MIMEText(message)
+            msg = MIMEText(body)
             msg["Subject"] = "Nová poptávka z NutriStep"
             msg["From"] = sender
-            msg["To"] = "pridal.jaroslav@icloud.com"
+            msg["To"] = sender
 
             server = smtplib.SMTP_SSL("smtp.mail.me.com", 465)
             server.login(sender, password)
-            server.sendmail(sender, "pridal.jaroslav@icloud.com", msg.as_string())
+            server.sendmail(sender, sender, msg.as_string())
             server.quit()
 
             st.success("Děkuji, zpráva byla úspěšně odeslána.")
 
         except Exception as e:
-            st.error(f"Došlo k chybě při odesílání: {e}")
+            st.error(f"Chyba při odesílání: {e}")
 
 st.caption("Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem kontaktování.")

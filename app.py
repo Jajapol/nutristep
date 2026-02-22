@@ -258,14 +258,17 @@ st.divider()
 st.subheader("Chcete individuální plán na míru?")
 st.write("Zanechte kontakt a ozvu se vám.")
 
-with st.form("contact_form"):
+with st.form("contact_form", clear_on_submit=True):
     name = st.text_input("Jméno")
     email = st.text_input("Email")
     phone = st.text_input("Telefon (volitelné)")
     message_text = st.text_area("Vaše zpráva / cíl", height=120)
     submitted = st.form_submit_button("Mám zájem o spolupráci")
 
-    if submitted and name and email:
+if submitted:
+    if not name or not email:
+        st.warning("Vyplňte prosím jméno a email.")
+    else:
         try:
             sender = st.secrets["EMAIL_ADDRESS"]
             password = st.secrets["EMAIL_PASSWORD"]
@@ -291,8 +294,9 @@ Zpráva:
             server.sendmail(sender, "pridal.jaroslav@icloud.com", msg.as_string())
             server.quit()
 
-            st.success("Děkuji, brzy se vám ozvu.")
-        except:
-            st.error("Došlo k chybě při odesílání.")
+            st.success("Děkuji, zpráva byla úspěšně odeslána.")
+
+        except Exception as e:
+            st.error(f"Došlo k chybě při odesílání: {e}")
 
 st.caption("Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem kontaktování.")

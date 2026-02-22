@@ -253,52 +253,30 @@ Klíčem k úspěchu je konzistence a dlouhodobá strategie.
     st.info("Tato kalkulačka je orientační nástroj.")
 
 # ======================================
-# KONTAKTNÍ FORMULÁŘ – GMAIL
+# KONTAKT – GOOGLE FORM
 # ======================================
 
 st.divider()
 st.subheader("Chcete individuální plán na míru?")
-st.write("Zanechte kontakt a ozvu se vám.")
+st.write("Klikněte na tlačítko níže a vyplňte kontaktní formulář.")
 
-with st.form("contact_form", clear_on_submit=True):
-    name = st.text_input("Jméno")
-    email = st.text_input("Email")
-    phone = st.text_input("Telefon (volitelné)")
-    message_text = st.text_area("Vaše zpráva / cíl", height=120)
-    submitted = st.form_submit_button("Mám zájem o spolupráci")
+google_form_url = "https://docs.google.com/forms/d/e/1FAIpQLSdQw2FC298PRNK41ZWjugdZj6_mm3DUd0hcRr_pl3kIDh3M-A/viewform"
 
-if submitted:
-    if not name or not email:
-        st.warning("Vyplňte prosím jméno a email.")
-    else:
-        try:
-            sender = st.secrets["EMAIL_ADDRESS"]
-            password = st.secrets["EMAIL_PASSWORD"]
-
-            body = f"""
-Nová poptávka z NutriStep
-
-Jméno: {name}
-Email: {email}
-Telefon: {phone}
-
-Zpráva:
-{message_text}
-"""
-
-            msg = MIMEText(body)
-            msg["Subject"] = "Nová poptávka z NutriStep"
-            msg["From"] = sender
-            msg["To"] = "jaroslav.pridal@gmail.com"
-
-            server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-            server.login(sender, password)
-            server.sendmail(sender, "jaroslav.pridal@gmail.com", msg.as_string())
-            server.quit()
-
-            st.success("Děkuji, zpráva byla úspěšně odeslána.")
-
-        except Exception as e:
-            st.error(f"Chyba při odesílání: {e}")
+st.markdown(
+    f"""
+    <a href="{google_form_url}" target="_blank">
+        <button style="
+            background-color:#1F2A44;
+            color:white;
+            padding:10px 20px;
+            border:none;
+            border-radius:8px;
+            font-size:16px;">
+            Mám zájem o spolupráci
+        </button>
+    </a>
+    """,
+    unsafe_allow_html=True
+)
 
 st.caption("Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem kontaktování.")

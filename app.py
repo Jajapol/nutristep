@@ -59,7 +59,7 @@ Každý plán vychází z individuálního výpočtu.*
 st.divider()
 
 # ======================================
-# BMR
+# BMR FUNKCE
 # ======================================
 
 def calculate_bmr(weight, height, age, gender):
@@ -67,6 +67,10 @@ def calculate_bmr(weight, height, age, gender):
         return (10 * weight) + (6.25 * height) - (5 * age) + 5
     else:
         return (10 * weight) + (6.25 * height) - (5 * age) - 161
+
+# ======================================
+# VSTUPY
+# ======================================
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
 age = st.number_input("Věk (roky)", 10, 100, 30)
@@ -249,7 +253,7 @@ Klíčem k úspěchu je konzistence a dlouhodobá strategie.
     st.info("Tato kalkulačka je orientační nástroj.")
 
 # ======================================
-# KONTAKTNÍ FORMULÁŘ (STABILNÍ VERZE)
+# KONTAKTNÍ FORMULÁŘ – GMAIL
 # ======================================
 
 st.divider()
@@ -285,11 +289,11 @@ Zpráva:
             msg = MIMEText(body)
             msg["Subject"] = "Nová poptávka z NutriStep"
             msg["From"] = sender
-            msg["To"] = sender
+            msg["To"] = "jaroslav.pridal@gmail.com"
 
-            server = smtplib.SMTP_SSL("smtp.mail.me.com", 465)
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
             server.login(sender, password)
-            server.sendmail(sender, sender, msg.as_string())
+            server.sendmail(sender, "jaroslav.pridal@gmail.com", msg.as_string())
             server.quit()
 
             st.success("Děkuji, zpráva byla úspěšně odeslána.")

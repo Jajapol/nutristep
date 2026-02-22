@@ -194,8 +194,10 @@ if st.button("Spočítat kalorický plán"):
 
     fat_kcal = target * 0.30
     fat_g = fat_kcal / 9
+
     protein_g = weight * protein_per_kg
     protein_kcal = protein_g * 4
+
     remaining_kcal = target - (fat_kcal + protein_kcal)
 
     if remaining_kcal < 0:
@@ -204,9 +206,18 @@ if st.button("Spočítat kalorický plán"):
 
     carbs_g = remaining_kcal / 4
 
+    sugar_max_g = carbs_g * 0.10
+    saturated_fat_max_g = fat_g * 0.10
+
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
+
+    st.divider()
+
+    st.write(f"Cukry (maximální hodnota): {sugar_max_g:.0f} g")
+    st.write(f"Nasycené mastné kyseliny (maximální hodnota): {saturated_fat_max_g:.0f} g")
+    st.write("Vláknina: 25–35 g denně")
 
     st.divider()
 

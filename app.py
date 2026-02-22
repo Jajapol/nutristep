@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 
 # ======================================
 # Nastavení stránky
@@ -14,8 +15,22 @@ header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("NutriStep")
-st.subheader("Mgr. Jaroslav Přidal")
+# ======================================
+# BRANDING FIRMY
+# ======================================
+
+st.title("NutriStep - Mgr. Jaroslav Přidal")
+
+st.markdown("""
+**Provozovatel:** NutriStep - Mgr. Jaroslav Přidal  
+**IČO:** 24012289  
+**Sídlo podnikání:** Budovatelů 173/7, Přerov  
+**Telefon:** 773 699 937  
+**E-mail:** pridal.jaroslav@icloud.com  
+""")
+
+st.caption(f"Aktuální datum: {datetime.now().strftime('%d.%m.%Y')}")
+
 st.write("Profesionální aplikace pro kalorické výpočty")
 
 # ======================================
@@ -111,7 +126,6 @@ st.divider()
 
 if st.button("Spočítat kalorický plán"):
 
-    # Základní výdej
     if activity_mode == "Paušální faktor aktivity":
         daily_base = bmr * activity_factor
         activity_daily = daily_base - bmr
@@ -120,11 +134,9 @@ if st.button("Spočítat kalorický plán"):
         daily_base = weekly_base / 7
         activity_daily = weekly_active_calories / 7
 
-    # TEF 10 %
     tdee = daily_base / 0.90
     tef_daily = tdee * 0.10
 
-    # Úprava dle cíle
     if goal == "Redukce":
         target = tdee - adjustment
     elif goal == "Nárůst":
@@ -143,7 +155,6 @@ if st.button("Spočítat kalorický plán"):
     if goal != "Udržování" and weekly_percent_weight_change > 1:
         st.warning("Změna přesahuje 1 % tělesné hmotnosti týdně.")
 
-    # Makra
     fat_kcal = target * 0.30
     fat_g = fat_kcal / 9
 
@@ -153,14 +164,10 @@ if st.button("Spočítat kalorický plán"):
     remaining_kcal = target - (fat_kcal + protein_kcal)
 
     if remaining_kcal < 0:
-        st.error("Příliš vysoké množství bílkovin pro daný příjem.")
+        st.error("Příliš vysoké množství bílkovin.")
         st.stop()
 
     carbs_g = remaining_kcal / 4
-
-    # ======================================
-    # ROZPAD VÝDEJE
-    # ======================================
 
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
@@ -169,10 +176,6 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Celkový TDEE: {tdee:.0f} kcal")
 
     st.divider()
-
-    # ======================================
-    # VÝSLEDKY
-    # ======================================
 
     st.subheader("Výsledky")
     st.write(f"Doporučený denní příjem: {target:.0f} kcal")
@@ -188,11 +191,8 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
 
-    # ======================================
-    # ODBORNÁ ANALÝZA
-    # ======================================
-
     st.divider()
+
     st.subheader("Odborná analýza")
 
     if goal != "Udržování":
@@ -206,11 +206,8 @@ if st.button("Spočítat kalorický plán"):
         else:
             st.error("Jedná se o agresivní redukci – zvažte úpravu.")
 
-    # ======================================
-    # EDUKATIVNÍ SEKCE
-    # ======================================
-
     st.divider()
+
     st.subheader("Jak číst tento výsledek")
 
     st.markdown("""

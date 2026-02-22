@@ -185,6 +185,34 @@ if st.button("Spočítat kalorický plán"):
 
     st.divider()
 
+    # ======================================
+    # TĚLESNÝ TUK (Deurenberg)
+    # ======================================
+
+    height_m = height / 100
+    bmi = weight / (height_m ** 2)
+
+    gender_value = 1 if gender == "Muž" else 0
+    body_fat = (1.20 * bmi) + (0.23 * age) - (10.8 * gender_value) - 5.4
+
+    fat_mass = weight * (body_fat / 100)
+    lean_mass = weight - fat_mass
+
+    st.subheader("Tělesné složení")
+
+    st.markdown("**Jedná se pouze o orientační výpočet tělesného tuku (statistický model).**")
+
+    st.write(f"BMI: {bmi:.1f}")
+    st.write(f"Odhad tělesného tuku: {body_fat:.1f} %")
+    st.write(f"Tuková hmota: {fat_mass:.1f} kg")
+    st.write(f"Beztuková hmota: {lean_mass:.1f} kg")
+
+    st.divider()
+
+    # ======================================
+    # MAKRA
+    # ======================================
+
     st.subheader("Makroživiny")
 
     fat_kcal = target * 0.30

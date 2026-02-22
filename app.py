@@ -195,17 +195,6 @@ if st.button("Spočítat kalorický plán"):
     ffmi = lean_mass / (height_m ** 2)
     st.write(f"FFMI: {ffmi:.1f}")
 
-    # ======================================
-    # METABOLICKÝ VĚK (KOREKTNÍ MODEL)
-    # ======================================
-
-    if gender == "Muž":
-        metabolic_age = (10*weight + 6.25*height + 5 - bmr) / 5
-    else:
-        metabolic_age = (10*weight + 6.25*height - 161 - bmr) / 5
-
-    st.write(f"Odhad metabolického věku: {metabolic_age:.0f} let")
-
     # Predikce změny tuku
     predicted_fat_change = predicted_weight_change * 0.8
     st.write(f"Odhad změny tukové hmoty / týden: {predicted_fat_change:.2f} kg")

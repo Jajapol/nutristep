@@ -1,14 +1,17 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+import tempfile
 
 # ======================================
-# NutriStep – Profesionální kalkulačka
-# Mgr. Jaroslav Přidal
+# Nastavení stránky
 # ======================================
 
-st.set_page_config(page_title="NutriStep – Kalorické výpočty", layout="centered")
+st.set_page_config(page_title="NutriStep", layout="centered")
 
-# Skrytí Streamlit menu
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -17,8 +20,12 @@ header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
+st.title("NutriStep")
+st.subheader("Mgr. Jaroslav Přidal")
+st.write("Profesionální aplikace pro kalorické výpočty")
+
 # ======================================
-# Funkce
+# Funkce BMR
 # ======================================
 
 def calculate_bmr(weight, height, age, gender):
@@ -29,208 +36,156 @@ def calculate_bmr(weight, height, age, gender):
 
 
 # ======================================
-# VSTUPY
+# Vstupy
 # ======================================
-
-st.title("NutriStep")
-st.subheader("Mgr. Jaroslav Přidal")
-st.write("Profesionální aplikace pro kalorické výpočty")
 
 st.divider()
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
-age = st.number_input("Věk (roky)", 10, 100, 30)
+age = st.number_input("Věk", 10, 100, 30)
 height = st.number_input("Výška (cm)", 100, 250, 170)
 weight = st.number_input("Váha (kg)", 30.0, 300.0, 80.0)
 
-st.subheader("Bazální metabolismus (BMR)")
+bmr_mode = st.radio("BMR:", ["Ručně", "Vypočítat rovnicí"])
 
-bmr_mode = st.radio(
-    "Způsob zadání BMR:",
-    ["Zadat ručně", "Vypočítat rovnicí (Mifflin-St Jeor)"]
-)
-
-if bmr_mode == "Zadat ručně":
-    bmr = st.number_input("Hodnota BMR (kcal)", 500.0, 4000.0, 1700.0)
+if bmr_mode == "Ručně":
+    bmr = st.number_input("BMR (kcal)", 500.0, 4000.0, 1700.0)
 else:
     bmr = calculate_bmr(weight, height, age, gender)
-    st.write(f"Vypočítané BMR: {bmr:.0f} kcal")
+    st.write(f"BMR: {bmr:.0f} kcal")
+
+activity_factor = st.selectbox(
+    "Faktor aktivity",
+    {
+        "Sedavý (1.2)": 1.2,
+        "Lehká aktivita (1.375)": 1.375,
+        "Střední aktivita (1.55)": 1.55,
+        "Vysoká aktivita (1.725)": 1.725
+    }
+)
+
+goal = st.selectbox("Cíl", ["Redukce", "Udržování", "Nárůst"])
+
+adjustment = 0
+if goal == "Redukce":
+    adjustment = st.number_input("Denní deficit (kcal)", 0, 2000, 500)
+elif goal == "Nárůst":
+    adjustment = st.number_input("Denní surplus (kcal)", 0, 2000, 300)
+
+protein_per_kg = st.number_input("Bílkoviny (g/kg)", 0.5, 3.5, 1.8)
 
 st.divider()
 
 # ======================================
-# AKTIVITA
-# ======================================
-
-activity_mode = st.radio(
-    "Způsob zadání aktivity:",
-    ["Aktivní kalorie za 7 dní", "Paušální faktor aktivity"]
-)
-
-if activity_mode == "Aktivní kalorie za 7 dní":
-    weekly_active_calories = st.number_input(
-        "Součet aktivních kalorií za 7 dní (kcal)",
-        0.0, 30000.0, 2500.0
-    )
-    activity_factor = None
-else:
-    activity_factor = st.selectbox(
-        "Vyber faktor aktivity",
-        {
-            "Sedavý (1.2)": 1.2,
-            "Lehká aktivita (1.375)": 1.375,
-            "Střední aktivita (1.55)": 1.55,
-            "Vysoká aktivita (1.725)": 1.725
-        }
-    )
-    weekly_active_calories = None
-
-st.divider()
-
-# ======================================
-# CÍL
-# ======================================
-
-goal = st.selectbox(
-    "Cíl:",
-    ["Redukce hmotnosti", "Udržování hmotnosti", "Nárůst hmotnosti"]
-)
-
-adjustment = 0.0
-
-if goal == "Redukce hmotnosti":
-    adjustment = st.number_input("Denní deficit (kcal)", 0.0, 2000.0, 500.0)
-
-elif goal == "Nárůst hmotnosti":
-    adjustment = st.number_input("Denní surplus (kcal)", 0.0, 2000.0, 300.0)
-
-protein_per_kg = st.number_input(
-    "Bílkoviny (g / kg tělesné hmotnosti)",
-    0.5, 3.5, 1.8
-)
-
-st.divider()
-
-# ======================================
-# VÝPOČET
+# Výpočet
 # ======================================
 
 if st.button("Spočítat kalorický plán"):
 
-    KCAL_PROTEIN = 4
-    KCAL_CARBS = 4
-    KCAL_FAT = 9
+    daily_base = bmr * activity_factor
+    tdee = daily_base / 0.90  # započtení TEF
 
-    # Výpočet základního výdeje
-    if activity_mode == "Aktivní kalorie za 7 dní":
-        weekly_base = (bmr * 7) + weekly_active_calories
-        daily_base = weekly_base / 7
-        activity_daily = weekly_active_calories / 7
+    if goal == "Redukce":
+        target = tdee - adjustment
+    elif goal == "Nárůst":
+        target = tdee + adjustment
     else:
-        daily_base = bmr * activity_factor
-        activity_daily = daily_base - bmr
+        target = tdee
 
-    # Přičtení TEF
-    tdee = daily_base / 0.90
-    weekly_tdee = tdee * 7
-    tef_daily = tdee * 0.10
-
-    # Úprava dle cíle
-    if goal == "Redukce hmotnosti":
-        target_calories = tdee - adjustment
-        weekly_energy_change = adjustment * 7
-        percent_change = (adjustment / tdee) * 100
-    elif goal == "Nárůst hmotnosti":
-        target_calories = tdee + adjustment
-        weekly_energy_change = adjustment * 7
-        percent_change = (adjustment / tdee) * 100
-    else:
-        target_calories = tdee
-        weekly_energy_change = 0
-        percent_change = 0
-
-    if target_calories < bmr:
+    if target < bmr:
         st.error("Nelze nastavit příjem pod hodnotu BMR.")
         st.stop()
 
+    weekly_energy_change = adjustment * 7 if goal != "Udržování" else 0
     predicted_weight_change = weekly_energy_change / 7700
     weekly_percent_weight_change = (predicted_weight_change / weight) * 100
 
-    if goal != "Udržování hmotnosti":
-        if weekly_percent_weight_change > 1:
-            st.error("Změna přesahuje 1 % tělesné hmotnosti týdně.")
+    if goal != "Udržování" and weekly_percent_weight_change > 1:
+        st.warning("Změna přesahuje 1 % tělesné hmotnosti týdně.")
 
     # Makra
-    fat_kcal = target_calories * 0.30
-    fat_g = fat_kcal / KCAL_FAT
+    fat_kcal = target * 0.30
+    fat_g = fat_kcal / 9
 
     protein_g = weight * protein_per_kg
-    protein_kcal = protein_g * KCAL_PROTEIN
+    protein_kcal = protein_g * 4
 
-    remaining_kcal = target_calories - (fat_kcal + protein_kcal)
+    remaining_kcal = target - (fat_kcal + protein_kcal)
 
     if remaining_kcal < 0:
         st.error("Příliš vysoké množství bílkovin pro daný příjem.")
         st.stop()
 
-    carbs_g = remaining_kcal / KCAL_CARBS
-
-    protein_percent = (protein_kcal / target_calories) * 100
-    fat_percent = 30
-    carbs_percent = 100 - protein_percent - fat_percent
+    carbs_g = remaining_kcal / 4
 
     # ======================================
-    # VÝSTUP
+    # Výstup
     # ======================================
 
-    st.subheader("Energetický výdej")
+    st.subheader("Výsledky")
     st.write(f"TDEE: {tdee:.0f} kcal")
-    st.write(f"TEF: {tef_daily:.0f} kcal")
+    st.write(f"Doporučený příjem: {target:.0f} kcal")
 
-    st.divider()
-
-    st.subheader("Plánovaný příjem")
-    st.write(f"Doporučený denní příjem: {target_calories:.0f} kcal")
-
-    if goal != "Udržování hmotnosti":
-        st.write(f"Odhad změny: {predicted_weight_change:.2f} kg / týden")
+    if goal != "Udržování":
+        st.write(f"Odhad změny hmotnosti: {predicted_weight_change:.2f} kg / týden")
         st.write(f"{weekly_percent_weight_change:.2f} % tělesné hmotnosti týdně")
-        st.write(f"{percent_change:.1f} % z TDEE")
 
     st.divider()
 
     st.subheader("Makroživiny")
-    st.write(f"Bílkoviny: {protein_g:.0f} g ({protein_percent:.1f} %)")
-    st.write(f"Tuky: {fat_g:.0f} g ({fat_percent:.0f} %)")
-    st.write(f"Sacharidy: {carbs_g:.0f} g ({carbs_percent:.1f} %)")
+    st.write(f"Bílkoviny: {protein_g:.0f} g")
+    st.write(f"Tuky: {fat_g:.0f} g")
+    st.write(f"Sacharidy: {carbs_g:.0f} g")
 
-    st.divider()
-    st.subheader("Vizualizace")
+    # ======================================
+    # Interaktivní graf
+    # ======================================
 
-    # Projekce hmotnosti
-    if goal != "Udržování hmotnosti":
+    if goal != "Udržování":
         weeks = [0, 1, 2, 3, 4]
-        weights_projection = [
-            weight + (predicted_weight_change * i if goal == "Nárůst hmotnosti"
+        weights = [
+            weight + (predicted_weight_change * i if goal == "Nárůst"
                       else -predicted_weight_change * i)
             for i in weeks
         ]
-        df_weight = pd.DataFrame({
-            "Týden": weeks,
-            "Hmotnost (kg)": weights_projection
-        })
-        st.line_chart(df_weight.set_index("Týden"))
 
-    # Makra graf
-    macro_df = pd.DataFrame({
-        "Makroživina": ["Bílkoviny", "Tuky", "Sacharidy"],
-        "Kalorie": [protein_kcal, fat_kcal, remaining_kcal]
-    })
-    st.bar_chart(macro_df.set_index("Makroživina"))
+        df = pd.DataFrame({"Týden": weeks, "Hmotnost (kg)": weights})
+        fig = px.line(df, x="Týden", y="Hmotnost (kg)", markers=True,
+                      title="Projekce hmotnosti (4 týdny)")
+        st.plotly_chart(fig)
 
-    # Rozpad výdeje
-    expenditure_df = pd.DataFrame({
-        "Složka": ["BMR", "Aktivita", "TEF"],
-        "Kalorie": [bmr, activity_daily, tef_daily]
-    })
-    st.bar_chart(expenditure_df.set_index("Složka"))
+    # ======================================
+    # PDF Export
+    # ======================================
+
+    def create_pdf():
+        file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        doc = SimpleDocTemplate(file.name)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        elements.append(Paragraph("NutriStep – Výživový report", styles["Heading1"]))
+        elements.append(Spacer(1, 0.3 * inch))
+
+        text = f"""
+        TDEE: {tdee:.0f} kcal<br/>
+        Doporučený příjem: {target:.0f} kcal<br/>
+        Odhad změny: {predicted_weight_change:.2f} kg týdně<br/><br/>
+        Bílkoviny: {protein_g:.0f} g<br/>
+        Tuky: {fat_g:.0f} g<br/>
+        Sacharidy: {carbs_g:.0f} g
+        """
+
+        elements.append(Paragraph(text, styles["Normal"]))
+        doc.build(elements)
+        return file.name
+
+    if st.button("Vytvořit PDF report"):
+        pdf_file = create_pdf()
+        with open(pdf_file, "rb") as f:
+            st.download_button(
+                label="Stáhnout PDF",
+                data=f,
+                file_name="nutristep_report.pdf",
+                mime="application/pdf"
+            )

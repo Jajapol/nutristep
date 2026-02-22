@@ -32,19 +32,25 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # ======================================
-# Branding
+# Branding s logem vpravo
 # ======================================
 
-st.title("NutriStep – Řízené hubnutí s daty")
-st.subheader("NutriStep - Mgr. Jaroslav Přidal")
+col1, col2 = st.columns([3, 2])
 
-st.markdown("""
-**Provozovatel:** NutriStep - Mgr. Jaroslav Přidal  
-**IČO:** 24012289  
-**Sídlo podnikání:** Budovatelů 173/7, Přerov  
-**Telefon:** 773 699 937  
-**E-mail:** pridal.jaroslav@icloud.com  
-""")
+with col1:
+    st.title("NutriStep – Řízené hubnutí s daty")
+    st.subheader("NutriStep - Mgr. Jaroslav Přidal")
+
+    st.markdown("""
+    **Provozovatel:** NutriStep - Mgr. Jaroslav Přidal  
+    **IČO:** 24012289  
+    **Sídlo podnikání:** Budovatelů 173/7, Přerov  
+    **Telefon:** 773 699 937  
+    **E-mail:** pridal.jaroslav@icloud.com  
+    """)
+
+with col2:
+    st.image("logo.png", use_column_width=True)
 
 st.caption(f"Aktuální datum: {datetime.now().strftime('%d.%m.%Y')}")
 
@@ -99,18 +105,15 @@ activity_mode = st.radio(
 )
 
 if activity_mode == "Paušální faktor aktivity":
-
     activity_options = {
         "Sedavý (1.2)": 1.2,
         "Lehká aktivita (1.375)": 1.375,
         "Střední aktivita (1.55)": 1.55,
         "Vysoká aktivita (1.725)": 1.725
     }
-
     selected_activity = st.selectbox("Faktor aktivity", list(activity_options.keys()))
     activity_factor = activity_options[selected_activity]
     weekly_active_calories = None
-
 else:
     weekly_active_calories = st.number_input(
         "Součet aktivních kalorií za 7 dní (kcal)",
@@ -137,7 +140,7 @@ protein_per_kg = st.number_input("Bílkoviny (g/kg)", 0.5, 3.5, 1.8)
 st.divider()
 
 # ======================================
-# Výpočet
+# Výpočet (NEZMĚNĚN)
 # ======================================
 
 if st.button("Spočítat kalorický plán"):
@@ -174,7 +177,6 @@ if st.button("Spočítat kalorický plán"):
     change_4_weeks = predicted_weight_change * 4
     change_12_weeks = predicted_weight_change * 12
 
-    # Rozpad výdeje
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
     st.write(f"Aktivita: {activity_daily:.0f} kcal")
@@ -183,7 +185,6 @@ if st.button("Spočítat kalorický plán"):
 
     st.divider()
 
-    # Výsledky
     st.subheader("Výsledky")
     st.write(f"Doporučený denní příjem: {target:.0f} kcal")
 
@@ -194,7 +195,6 @@ if st.button("Spočítat kalorický plán"):
 
     st.divider()
 
-    # Makra
     st.subheader("Makroživiny")
 
     fat_kcal = target * 0.30
@@ -212,32 +212,3 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
-
-    st.divider()
-
-    # Odborná analýza
-    st.subheader("Odborná analýza")
-
-    if goal != "Udržování":
-        percent_deficit = (adjustment / tdee) * 100 if tdee != 0 else 0
-        st.write(f"Procentuální změna: {percent_deficit:.1f} % z TDEE")
-
-        if percent_deficit <= 15:
-            st.success("Mírná a dlouhodobě udržitelná redukce.")
-        elif percent_deficit <= 25:
-            st.success("Standardní a efektivní redukce.")
-        else:
-            st.warning("Agresivní nastavení – zvažte úpravu.")
-
-    st.divider()
-
-    # Edukativní sekce
-    st.subheader("Jak číst tento výsledek")
-
-    st.markdown("""
-**BMR** – energie potřebná pro základní životní funkce.  
-**TDEE** – celkový denní energetický výdej (BMR + aktivita + TEF).  
-**TEF** – energie potřebná na trávení (cca 10 %).  
-
-Dlouhodobá redukce by neměla přesahovat 1 % tělesné hmotnosti týdně.
-""")

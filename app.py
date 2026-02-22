@@ -233,3 +233,53 @@ Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu
 
 Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
 """)
+# ======================================
+# KONTAKTNÍ FORMULÁŘ
+# ======================================
+
+st.divider()
+st.subheader("Chcete individuální plán na míru?")
+
+st.write("Zanechte kontakt a ozvu se vám.")
+
+with st.form("contact_form"):
+    name = st.text_input("Jméno")
+    email = st.text_input("Email")
+    phone = st.text_input("Telefon (volitelné)")
+    submitted = st.form_submit_button("Mám zájem o spolupráci")
+
+    if submitted:
+        if name and email:
+            import smtplib
+            from email.mime.text import MIMEText
+
+            try:
+                sender = st.secrets["EMAIL_ADDRESS"]
+                password = st.secrets["EMAIL_PASSWORD"]
+
+                message = f"""
+Nová poptávka z Nutriční kalkulačky
+
+Jméno: {name}
+Email: {email}
+Telefon: {phone}
+"""
+
+                msg = MIMEText(message)
+                msg["Subject"] = "Nová poptávka z NutriStep"
+                msg["From"] = sender
+                msg["To"] = "pridal.jaroslav@icloud.com"
+
+                server = smtplib.SMTP("smtp.gmail.com", 587)
+                server.starttls()
+                server.login(sender, password)
+                server.sendmail(sender, "pridal.jaroslav@icloud.com", msg.as_string())
+                server.quit()
+
+                st.success("Děkuji, brzy se vám ozvu.")
+
+            except Exception as e:
+                st.error("Došlo k chybě při odesílání.")
+
+        else:
+            st.warning("Vyplňte prosím jméno a email.")

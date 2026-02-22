@@ -59,7 +59,7 @@ Každý plán vychází z individuálního výpočtu.*
 st.divider()
 
 # ======================================
-# BMR
+# BMR FUNKCE
 # ======================================
 
 def calculate_bmr(weight, height, age, gender):
@@ -67,6 +67,10 @@ def calculate_bmr(weight, height, age, gender):
         return (10 * weight) + (6.25 * height) - (5 * age) + 5
     else:
         return (10 * weight) + (6.25 * height) - (5 * age) - 161
+
+# ======================================
+# VSTUPY
+# ======================================
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
 age = st.number_input("Věk (roky)", 10, 100, 30)
@@ -191,8 +195,15 @@ if st.button("Spočítat kalorický plán"):
     ffmi = lean_mass / (height_m ** 2)
     st.write(f"FFMI: {ffmi:.1f}")
 
-    # Metabolický věk (orientační model)
-    metabolic_age = age * (bmr / bmr_lbm)
+    # ======================================
+    # METABOLICKÝ VĚK (KOREKTNÍ MODEL)
+    # ======================================
+
+    if gender == "Muž":
+        metabolic_age = (10*weight + 6.25*height + 5 - bmr) / 5
+    else:
+        metabolic_age = (10*weight + 6.25*height - 161 - bmr) / 5
+
     st.write(f"Odhad metabolického věku: {metabolic_age:.0f} let")
 
     # Predikce změny tuku

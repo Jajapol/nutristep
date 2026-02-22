@@ -1,7 +1,6 @@
 import streamlit as st
 from datetime import datetime
 import os
-import pandas as pd
 
 # ======================================
 # Nastavení stránky + vizuální styl
@@ -209,15 +208,16 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
 
-    macro_table = pd.DataFrame({
-        "Makroživina": ["Bílkoviny", "Tuky", "Sacharidy"],
-        "Množství (g)": [round(protein_g,1), round(fat_g,1), round(carbs_g,1)],
-        "Energetická hodnota (kcal)": [round(protein_kcal,1), round(fat_kcal,1), round(remaining_kcal,1)]
-    })
-
-    st.table(macro_table)
-
     st.divider()
+
+    st.subheader("Motivační shrnutí")
+
+    st.markdown("""
+Tento plán představuje realistický a dlouhodobě udržitelný přístup.  
+Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu.  
+
+Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
+""")
 
     st.info("Tato kalkulačka je orientační nástroj. Individuální plán zohledňuje zdravotní stav, historii diety a metabolickou adaptaci.")
 

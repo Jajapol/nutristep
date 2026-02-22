@@ -36,7 +36,7 @@ def calculate_bmr(weight, height, age, gender):
 
 
 # ======================================
-# Vstupy
+# VSTUPY
 # ======================================
 
 st.divider()
@@ -54,15 +54,20 @@ else:
     bmr = calculate_bmr(weight, height, age, gender)
     st.write(f"BMR: {bmr:.0f} kcal")
 
-activity_factor = st.selectbox(
+# Správně vyřešený faktor aktivity
+activity_options = {
+    "Sedavý (1.2)": 1.2,
+    "Lehká aktivita (1.375)": 1.375,
+    "Střední aktivita (1.55)": 1.55,
+    "Vysoká aktivita (1.725)": 1.725
+}
+
+selected_activity = st.selectbox(
     "Faktor aktivity",
-    {
-        "Sedavý (1.2)": 1.2,
-        "Lehká aktivita (1.375)": 1.375,
-        "Střední aktivita (1.55)": 1.55,
-        "Vysoká aktivita (1.725)": 1.725
-    }
+    list(activity_options.keys())
 )
+
+activity_factor = activity_options[selected_activity]
 
 goal = st.selectbox("Cíl", ["Redukce", "Udržování", "Nárůst"])
 
@@ -77,7 +82,7 @@ protein_per_kg = st.number_input("Bílkoviny (g/kg)", 0.5, 3.5, 1.8)
 st.divider()
 
 # ======================================
-# Výpočet
+# VÝPOČET
 # ======================================
 
 if st.button("Spočítat kalorický plán"):
@@ -119,7 +124,7 @@ if st.button("Spočítat kalorický plán"):
     carbs_g = remaining_kcal / 4
 
     # ======================================
-    # Výstup
+    # VÝSTUP
     # ======================================
 
     st.subheader("Výsledky")
@@ -150,8 +155,13 @@ if st.button("Spočítat kalorický plán"):
         ]
 
         df = pd.DataFrame({"Týden": weeks, "Hmotnost (kg)": weights})
-        fig = px.line(df, x="Týden", y="Hmotnost (kg)", markers=True,
-                      title="Projekce hmotnosti (4 týdny)")
+        fig = px.line(
+            df,
+            x="Týden",
+            y="Hmotnost (kg)",
+            markers=True,
+            title="Projekce hmotnosti (4 týdny)"
+        )
         st.plotly_chart(fig)
 
     # ======================================

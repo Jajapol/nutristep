@@ -33,7 +33,7 @@ header {visibility: hidden;}
 col1, col2 = st.columns([3, 2])
 
 with col1:
-    st.title("NutriStep – Řízené hubnutí s daty")
+    st.title("Nutriční kalkulačka od NutriStep - Mgr. Jaroslav Přidal")
     st.subheader("NutriStep - Mgr. Jaroslav Přidal")
 
     st.markdown("""
@@ -172,10 +172,6 @@ if st.button("Spočítat kalorický plán"):
     change_4_weeks = predicted_weight_change * 4
     change_12_weeks = predicted_weight_change * 12
 
-    # ======================================
-    # ROZPAD VÝDEJE
-    # ======================================
-
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
     st.write(f"Aktivita: {activity_daily:.0f} kcal")
@@ -183,10 +179,6 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Celkový TDEE: {tdee:.0f} kcal")
 
     st.divider()
-
-    # ======================================
-    # VÝSLEDKY
-    # ======================================
 
     st.subheader("Výsledky")
     st.write(f"Doporučený denní příjem: {target:.0f} kcal")
@@ -197,10 +189,6 @@ if st.button("Spočítat kalorický plán"):
         st.write(f"Odhad za 12 týdnů: {change_12_weeks:.2f} kg")
 
     st.divider()
-
-    # ======================================
-    # MAKROŽIVINY
-    # ======================================
 
     st.subheader("Makroživiny")
 
@@ -222,10 +210,6 @@ if st.button("Spočítat kalorický plán"):
 
     st.divider()
 
-    # ======================================
-    # ODBORNÁ ANALÝZA
-    # ======================================
-
     st.subheader("Odborná analýza")
 
     if goal != "Udržování":
@@ -240,10 +224,6 @@ if st.button("Spočítat kalorický plán"):
             st.warning("Agresivní nastavení – zvažte úpravu.")
 
     st.divider()
-
-    # ======================================
-    # MOTIVAČNÍ SHRNUTÍ
-    # ======================================
 
     st.subheader("Motivační shrnutí")
 

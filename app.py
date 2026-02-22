@@ -1,25 +1,25 @@
 import streamlit as st
 
-# ===============================
-# NutriStep – Kalorické výpočty
+# ======================================
+# NutriStep – Profesionální kalkulačka
 # Mgr. Jaroslav Přidal
-# ===============================
+# ======================================
 
 st.set_page_config(page_title="NutriStep – Kalorické výpočty", layout="centered")
 
-# Skrytí Streamlit menu
+# Skrytí menu
 st.markdown("""
-    <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-    </style>
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
 """, unsafe_allow_html=True)
 
 
-# ===============================
+# ======================================
 # Funkce
-# ===============================
+# ======================================
 
 def calculate_bmr(weight, height, age, gender):
     if gender == "Muž":
@@ -28,17 +28,15 @@ def calculate_bmr(weight, height, age, gender):
         return (10 * weight) + (6.25 * height) - (5 * age) - 161
 
 
-# ===============================
-# UI
-# ===============================
+# ======================================
+# VSTUPY
+# ======================================
 
 st.title("NutriStep")
 st.subheader("Mgr. Jaroslav Přidal")
-st.write("Aplikace pro kalorické výpočty")
+st.write("Profesionální aplikace pro kalorické výpočty")
 
 st.divider()
-
-# --- ZÁKLADNÍ ÚDAJE ---
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
 age = st.number_input("Věk (roky)", 10, 100, 30)
@@ -60,21 +58,19 @@ else:
 
 st.divider()
 
-# --- AKTIVITA ---
-
-st.subheader("Způsob zadání aktivity")
+# ======================================
+# AKTIVITA
+# ======================================
 
 activity_mode = st.radio(
-    "",
+    "Způsob zadání aktivity:",
     ["Aktivní kalorie za 7 dní", "Paušální faktor aktivity"]
 )
 
 if activity_mode == "Aktivní kalorie za 7 dní":
     weekly_active_calories = st.number_input(
         "Součet aktivních kalorií za 7 dní (kcal)",
-        0.0,
-        30000.0,
-        2500.0
+        0.0, 30000.0, 2500.0
     )
     activity_factor = None
 else:
@@ -91,7 +87,9 @@ else:
 
 st.divider()
 
-# --- CÍL ---
+# ======================================
+# CÍL
+# ======================================
 
 goal = st.selectbox(
     "Cíl:",
@@ -108,16 +106,14 @@ elif goal == "Nárůst hmotnosti":
 
 protein_per_kg = st.number_input(
     "Bílkoviny (g / kg tělesné hmotnosti)",
-    0.5,
-    3.5,
-    1.8
+    0.5, 3.5, 1.8
 )
 
 st.divider()
 
-# ===============================
+# ======================================
 # VÝPOČET
-# ===============================
+# ======================================
 
 if st.button("Spočítat kalorický plán"):
 
@@ -132,7 +128,7 @@ if st.button("Spočítat kalorický plán"):
     else:
         daily_base = bmr * activity_factor
 
-    # Přičtení TEF (10 %)
+    # Přičtení TEF
     tdee = daily_base / 0.90
     weekly_tdee = tdee * 7
     tef_daily = tdee * 0.10
@@ -141,22 +137,36 @@ if st.button("Spočítat kalorický plán"):
     if goal == "Redukce hmotnosti":
         target_calories = tdee - adjustment
         weekly_energy_change = adjustment * 7
+        percent_change = (adjustment / tdee) * 100
+
     elif goal == "Nárůst hmotnosti":
         target_calories = tdee + adjustment
         weekly_energy_change = adjustment * 7
+        percent_change = (adjustment / tdee) * 100
+
     else:
         target_calories = tdee
         weekly_energy_change = 0
+        percent_change = 0
 
-    # --- Ochrana proti příjmu pod BMR ---
+    # Ochrana pod BMR
     if target_calories < bmr:
-        st.error("Nelze nastavit příjem pod hodnotu BMR. Snižte deficit.")
+        st.error("Nelze nastavit příjem pod hodnotu BMR.")
         st.stop()
 
-    # --- Odhad změny hmotnosti ---
+    # --- Změna hmotnosti ---
     predicted_weight_change = weekly_energy_change / 7700
+    weekly_percent_weight_change = (predicted_weight_change / weight) * 100
 
-    # --- Makroživiny ---
+    # Kontrola 1 % týdně
+    if goal == "Redukce hmotnosti":
+        if weekly_percent_weight_change > 1:
+            st.error("Plánovaný úbytek přesahuje 1 % tělesné hmotnosti týdně.")
+    elif goal == "Nárůst hmotnosti":
+        if weekly_percent_weight_change > 1:
+            st.warning("Plánovaný nárůst přesahuje 1 % tělesné hmotnosti týdně.")
+
+    # --- Makra ---
     fat_kcal = target_calories * 0.30
     fat_g = fat_kcal / KCAL_FAT
 
@@ -164,33 +174,39 @@ if st.button("Spočítat kalorický plán"):
     protein_kcal = protein_g * KCAL_PROTEIN
 
     remaining_kcal = target_calories - (fat_kcal + protein_kcal)
+
+    if remaining_kcal < 0:
+        st.error("Příliš vysoké množství bílkovin pro daný příjem.")
+        st.stop()
+
     carbs_g = remaining_kcal / KCAL_CARBS
 
-    # ===============================
+    protein_percent = (protein_kcal / target_calories) * 100
+    fat_percent = 30
+    carbs_percent = 100 - protein_percent - fat_percent
+
+    # ======================================
     # VÝSTUP
-    # ===============================
+    # ======================================
 
     st.subheader("Energetický výdej")
-
-    st.write(f"BMR: {bmr:.0f} kcal")
-    st.write(f"Průměrná denní spotřeba (včetně TEF): {tdee:.0f} kcal")
-    st.write(f"Týdenní výdej: {weekly_tdee:.0f} kcal")
-    st.write(f"Denní TEF (10 %): {tef_daily:.0f} kcal")
+    st.write(f"TDEE: {tdee:.0f} kcal")
+    st.write(f"Denní TEF: {tef_daily:.0f} kcal")
 
     st.divider()
 
     st.subheader("Plánovaný příjem")
-
     st.write(f"Doporučený denní příjem: {target_calories:.0f} kcal")
 
     if goal != "Udržování hmotnosti":
-        st.write(f"Týdenní energetická změna: {weekly_energy_change:.0f} kcal")
+        st.write(f"Týdenní změna energie: {weekly_energy_change:.0f} kcal")
         st.write(f"Odhad změny hmotnosti: {predicted_weight_change:.2f} kg / týden")
+        st.write(f"To odpovídá {weekly_percent_weight_change:.2f} % tělesné hmotnosti týdně")
+        st.write(f"Procentuální změna: {percent_change:.1f} % z TDEE")
 
     st.divider()
 
     st.subheader("Makroživiny")
-
-    st.write(f"Bílkoviny: {protein_g:.0f} g ({protein_kcal:.0f} kcal)")
-    st.write(f"Tuky (30 %): {fat_g:.0f} g ({fat_kcal:.0f} kcal)")
-    st.write(f"Sacharidy: {carbs_g:.0f} g ({remaining_kcal:.0f} kcal)")
+    st.write(f"Bílkoviny: {protein_g:.0f} g ({protein_percent:.1f} %)")
+    st.write(f"Tuky: {fat_g:.0f} g ({fat_percent:.0f} %)")
+    st.write(f"Sacharidy: {carbs_g:.0f} g ({carbs_percent:.1f} %)")

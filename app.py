@@ -33,7 +33,7 @@ header {visibility: hidden;}
 col1, col2 = st.columns([3, 2])
 
 with col1:
-    st.title("Nutriční kalkulačka od NutriStep - Mgr. Jaroslav Přidal")
+    st.title("Nutriční kalkulačka")
     st.subheader("NutriStep - Mgr. Jaroslav Přidal")
 
     st.markdown("""

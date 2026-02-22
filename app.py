@@ -211,16 +211,8 @@ if st.button("Spočítat kalorický plán"):
 
     macro_table = pd.DataFrame({
         "Makroživina": ["Bílkoviny", "Tuky", "Sacharidy"],
-        "Množství (g)": [
-            round(protein_g, 1),
-            round(fat_g, 1),
-            round(carbs_g, 1)
-        ],
-        "Energetická hodnota (kcal)": [
-            round(protein_kcal, 1),
-            round(fat_kcal, 1),
-            round(remaining_kcal, 1)
-        ]
+        "Množství (g)": [round(protein_g,1), round(fat_g,1), round(carbs_g,1)],
+        "Energetická hodnota (kcal)": [round(protein_kcal,1), round(fat_kcal,1), round(remaining_kcal,1)]
     })
 
     st.table(macro_table)

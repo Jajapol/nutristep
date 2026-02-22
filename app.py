@@ -114,12 +114,15 @@ if st.button("Spočítat kalorický plán"):
     # Výpočet základního výdeje
     if activity_mode == "Paušální faktor aktivity":
         daily_base = bmr * activity_factor
+        activity_daily = daily_base - bmr
     else:
         weekly_base = (bmr * 7) + weekly_active_calories
         daily_base = weekly_base / 7
+        activity_daily = weekly_active_calories / 7
 
-    # Přičtení TEF
+    # TEF (10 %)
     tdee = daily_base / 0.90
+    tef_daily = tdee * 0.10
 
     # Úprava dle cíle
     if goal == "Redukce":
@@ -137,9 +140,6 @@ if st.button("Spočítat kalorický plán"):
     predicted_weight_change = weekly_energy_change / 7700
     weekly_percent_weight_change = (predicted_weight_change / weight) * 100
 
-    if goal != "Udržování" and weekly_percent_weight_change > 1:
-        st.warning("Změna přesahuje 1 % tělesné hmotnosti týdně.")
-
     # Makra
     fat_kcal = target * 0.30
     fat_g = fat_kcal / 9
@@ -156,11 +156,22 @@ if st.button("Spočítat kalorický plán"):
     carbs_g = remaining_kcal / 4
 
     # ======================================
-    # VÝSTUP
+    # ROZPAD VÝDEJE
+    # ======================================
+
+    st.subheader("Rozpad energetického výdeje")
+    st.write(f"BMR: {bmr:.0f} kcal")
+    st.write(f"Aktivita: {activity_daily:.0f} kcal")
+    st.write(f"TEF (10 %): {tef_daily:.0f} kcal")
+    st.write(f"Celkový TDEE: {tdee:.0f} kcal")
+
+    st.divider()
+
+    # ======================================
+    # VÝSLEDKY
     # ======================================
 
     st.subheader("Výsledky")
-    st.write(f"TDEE: {tdee:.0f} kcal")
     st.write(f"Doporučený denní příjem: {target:.0f} kcal")
 
     if goal != "Udržování":
@@ -173,46 +184,3 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
-
-    # ======================================
-    # ODBORNÁ ANALÝZA
-    # ======================================
-
-    st.divider()
-    st.subheader("Odborná analýza")
-
-    if goal != "Udržování":
-        percent_deficit = (adjustment / tdee) * 100 if tdee != 0 else 0
-        st.write(f"Procentuální změna: {percent_deficit:.1f} % z TDEE")
-
-        if percent_deficit <= 15:
-            st.success("Jedná se o mírnou a dlouhodobě udržitelnou redukci.")
-        elif percent_deficit <= 25:
-            st.warning("Jedná se o standardní redukční nastavení.")
-        else:
-            st.error("Jedná se o agresivní redukci – zvažte úpravu.")
-
-    # ======================================
-    # EDUKATIVNÍ SEKCE
-    # ======================================
-
-    st.divider()
-    st.subheader("Jak číst tento výsledek")
-
-    st.markdown("""
-**BMR (Bazální metabolismus)**  
-Energie potřebná pro základní životní funkce v klidu.
-
-**TDEE (Celkový denní výdej energie)**  
-Součet BMR, fyzické aktivity a energie potřebné na trávení (TEF).
-
-**TEF (Thermic Effect of Food)**  
-Přibližně 10 % denního energetického výdeje.
-
-**Makroživiny**
-- Bílkoviny pomáhají udržet svalovou hmotu.
-- Tuky jsou fixně nastaveny na 30 %.
-- Sacharidy doplňují zbytek energie.
-
-Dlouhodobá redukce by neměla přesahovat 1 % tělesné hmotnosti týdně.
-""")

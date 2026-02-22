@@ -5,7 +5,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 # ======================================
-# Nastavení stránky + vizuální styl
+# NASTAVENÍ STRÁNKY
 # ======================================
 
 st.set_page_config(page_title="NutriStep", layout="centered")
@@ -29,15 +29,14 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # ======================================
-# Branding + Logo
+# BRANDING + LOGO
 # ======================================
 
-col1, col2 = st.columns([3, 2])
+col1, col2 = st.columns([3,2])
 
 with col1:
     st.title("Nutriční kalkulačka")
     st.subheader("NutriStep - Mgr. Jaroslav Přidal")
-
     st.markdown("""
 **Provozovatel:** NutriStep - Mgr. Jaroslav Přidal  
 **IČO:** 24012289  
@@ -60,7 +59,7 @@ Každý plán vychází z individuálního výpočtu.*
 st.divider()
 
 # ======================================
-# Funkce BMR
+# BMR
 # ======================================
 
 def calculate_bmr(weight, height, age, gender):
@@ -69,16 +68,10 @@ def calculate_bmr(weight, height, age, gender):
     else:
         return (10 * weight) + (6.25 * height) - (5 * age) - 161
 
-# ======================================
-# VSTUPY
-# ======================================
-
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
 age = st.number_input("Věk (roky)", 10, 100, 30)
 height = st.number_input("Výška (cm)", 100, 250, 170)
 weight = st.number_input("Váha (kg)", 30.0, 300.0, 80.0)
-
-st.subheader("Bazální metabolismus (BMR)")
 
 bmr_mode = st.radio("Způsob zadání BMR:", ["Zadat ručně", "Vypočítat rovnicí"])
 
@@ -94,12 +87,8 @@ st.divider()
 # AKTIVITA
 # ======================================
 
-st.subheader("Způsob zadání aktivity")
-
-activity_mode = st.radio(
-    "",
-    ["Paušální faktor aktivity", "Ruční zadání aktivních kalorií (7 dní)"]
-)
+activity_mode = st.radio("Způsob zadání aktivity:",
+    ["Paušální faktor aktivity", "Ruční zadání aktivních kalorií (7 dní)"])
 
 if activity_mode == "Paušální faktor aktivity":
     activity_options = {
@@ -108,16 +97,11 @@ if activity_mode == "Paušální faktor aktivity":
         "Střední aktivita (1.55)": 1.55,
         "Vysoká aktivita (1.725)": 1.725
     }
-    selected_activity = st.selectbox("Faktor aktivity", list(activity_options.keys()))
-    activity_factor = activity_options[selected_activity]
-    tdee_base = bmr * activity_factor
+    selected = st.selectbox("Faktor aktivity", list(activity_options.keys()))
+    tdee_base = bmr * activity_options[selected]
 else:
-    weekly_active_calories = st.number_input(
-        "Součet aktivních kalorií za 7 dní (kcal)",
-        0.0, 30000.0, 2500.0
-    )
-    activity_daily = weekly_active_calories / 7
-    tdee_base = bmr + activity_daily
+    weekly_active = st.number_input("Součet aktivních kalorií za 7 dní", 0.0, 30000.0, 2500.0)
+    tdee_base = bmr + (weekly_active / 7)
 
 st.divider()
 
@@ -159,9 +143,9 @@ if st.button("Spočítat kalorický plán"):
 
     weekly_energy_change = adjustment * 7 if goal != "Udržování" else 0
     predicted_weight_change = weekly_energy_change / 7700
-    weekly_percent_weight_change = (predicted_weight_change / weight) * 100
+    weekly_percent_change = (predicted_weight_change / weight) * 100
 
-    if goal != "Udržování" and weekly_percent_weight_change > 1:
+    if goal != "Udržování" and weekly_percent_change > 1:
         st.warning("Změna přesahuje 1 % tělesné hmotnosti týdně.")
 
     change_4_weeks = predicted_weight_change * 4
@@ -169,37 +153,29 @@ if st.button("Spočítat kalorický plán"):
 
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
-    st.write(f"Výdej bez TEF: {tdee_base:.0f} kcal")
-    st.write(f"TEF (10 %): {tef:.0f} kcal")
-    st.write(f"Celkový TDEE: {tdee:.0f} kcal")
-
-    st.divider()
-
-    st.subheader("Výsledky")
-    st.write(f"Doporučený denní příjem: {target:.0f} kcal")
+    st.write(f"TDEE: {tdee:.0f} kcal")
+    st.write(f"Doporučený příjem: {target:.0f} kcal")
 
     if goal != "Udržování":
-        st.write(f"Odhad změny hmotnosti: {predicted_weight_change:.2f} kg / týden")
+        st.write(f"Odhad změny hmotnosti / týden: {predicted_weight_change:.2f} kg")
         st.write(f"Odhad za 4 týdny: {change_4_weeks:.2f} kg")
         st.write(f"Odhad za 12 týdnů: {change_12_weeks:.2f} kg")
 
     st.divider()
 
     # ======================================
-    # TĚLESNÝ TUK (Deurenberg)
+    # TĚLESNÉ SLOŽENÍ
     # ======================================
 
     height_m = height / 100
     bmi = weight / (height_m ** 2)
+    gender_val = 1 if gender == "Muž" else 0
 
-    gender_value = 1 if gender == "Muž" else 0
-    body_fat = (1.20 * bmi) + (0.23 * age) - (10.8 * gender_value) - 5.4
-
+    body_fat = (1.20 * bmi) + (0.23 * age) - (10.8 * gender_val) - 5.4
     fat_mass = weight * (body_fat / 100)
     lean_mass = weight - fat_mass
 
     st.subheader("Tělesné složení")
-
     st.markdown("**Jedná se pouze o orientační výpočet tělesného tuku (statistický model).**")
 
     st.write(f"BMI: {bmi:.1f}")
@@ -207,13 +183,27 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Tuková hmota: {fat_mass:.1f} kg")
     st.write(f"Beztuková hmota: {lean_mass:.1f} kg")
 
+    # BMR dle LBM
+    bmr_lbm = 370 + (21.6 * lean_mass)
+    st.write(f"BMR dle beztukové hmoty: {bmr_lbm:.0f} kcal")
+
+    # FFMI
+    ffmi = lean_mass / (height_m ** 2)
+    st.write(f"FFMI: {ffmi:.1f}")
+
+    # Metabolický věk (orientační model)
+    metabolic_age = age * (bmr / bmr_lbm)
+    st.write(f"Odhad metabolického věku: {metabolic_age:.0f} let")
+
+    # Predikce změny tuku
+    predicted_fat_change = predicted_weight_change * 0.8
+    st.write(f"Odhad změny tukové hmoty / týden: {predicted_fat_change:.2f} kg")
+
     st.divider()
 
     # ======================================
     # MAKRA
     # ======================================
-
-    st.subheader("Makroživiny")
 
     fat_kcal = target * 0.30
     fat_g = fat_kcal / 9
@@ -228,18 +218,16 @@ if st.button("Spočítat kalorický plán"):
         st.stop()
 
     carbs_g = remaining_kcal / 4
+    sugar_max = carbs_g * 0.10
+    saturated_max = (target * 0.10) / 9
 
-    sugar_max_g = carbs_g * 0.10
-    saturated_fat_max_g = (target * 0.10) / 9
-
+    st.subheader("Makroživiny")
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
 
-    st.divider()
-
-    st.write(f"Cukry (maximální hodnota): {sugar_max_g:.0f} g")
-    st.write(f"Nasycené mastné kyseliny (max 10 % z celkového příjmu): {saturated_fat_max_g:.0f} g")
+    st.write(f"Cukry (maximální hodnota): {sugar_max:.0f} g")
+    st.write(f"Nasycené MK (max 10 % z celkového příjmu): {saturated_max:.0f} g")
     st.write("Vláknina: 25–35 g denně")
 
     st.divider()
@@ -275,7 +263,7 @@ with st.form("contact_form"):
                 password = st.secrets["EMAIL_PASSWORD"]
 
                 message = f"""
-Nová poptávka z Nutriční kalkulačky
+Nová poptávka z NutriStep
 
 Jméno: {name}
 Email: {email}
@@ -296,7 +284,6 @@ Zpráva:
                 server.quit()
 
                 st.success("Děkuji, brzy se vám ozvu.")
-
             except Exception:
                 st.error("Došlo k chybě při odesílání.")
         else:

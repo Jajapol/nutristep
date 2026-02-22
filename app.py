@@ -108,13 +108,13 @@ if activity_mode == "Paušální faktor aktivity":
     }
     selected_activity = st.selectbox("Faktor aktivity", list(activity_options.keys()))
     activity_factor = activity_options[selected_activity]
-    weekly_active_calories = None
+    activity_daily = (bmr * activity_factor) - bmr
 else:
     weekly_active_calories = st.number_input(
         "Součet aktivních kalorií za 7 dní (kcal)",
         0.0, 30000.0, 2500.0
     )
-    activity_factor = None
+    activity_daily = weekly_active_calories / 7
 
 st.divider()
 
@@ -140,16 +140,10 @@ st.divider()
 
 if st.button("Spočítat kalorický plán"):
 
-    if activity_mode == "Paušální faktor aktivity":
-        daily_base = bmr * activity_factor
-        activity_daily = daily_base - bmr
-    else:
-        weekly_base = (bmr * 7) + weekly_active_calories
-        daily_base = weekly_base / 7
-        activity_daily = weekly_active_calories / 7
-
-    tdee = daily_base / 0.90
-    tef_daily = tdee * 0.10
+    # TDEE výpočet
+    tdee_base = bmr + activity_daily
+    tef_daily = tdee_base * 0.10
+    tdee = tdee_base + tef_daily
 
     if goal == "Redukce":
         target = tdee - adjustment
@@ -206,9 +200,10 @@ if st.button("Spočítat kalorický plán"):
 
     carbs_g = remaining_kcal / 4
 
+    # Cukry – max 10 % ze sacharidů
     sugar_max_g = carbs_g * 0.10
 
-    # OPRAVA NMK – 10 % z celkového příjmu
+    # NMK – max 10 % z celkového denního příjmu
     saturated_fat_max_kcal = target * 0.10
     saturated_fat_max_g = saturated_fat_max_kcal / 9
 
@@ -219,7 +214,7 @@ if st.button("Spočítat kalorický plán"):
     st.divider()
 
     st.write(f"Cukry (maximální hodnota): {sugar_max_g:.0f} g")
-    st.write(f"Nasycené mastné kyseliny (maximální hodnota): {saturated_fat_max_g:.0f} g")
+    st.write(f"Nasycené mastné kyseliny (maximální hodnota – 10 % z celkového příjmu): {saturated_fat_max_g:.0f} g")
     st.write("Vláknina: 25–35 g denně")
 
     st.divider()

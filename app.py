@@ -9,6 +9,22 @@ st.set_page_config(page_title="NutriStep", layout="centered")
 
 st.markdown("""
 <style>
+body {
+    background-color: #F4F6F9;
+}
+h1, h2, h3 {
+    color: #1F2A44;
+}
+.stButton>button {
+    background-color: #1F2A44;
+    color: white;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border: none;
+}
+.stButton>button:hover {
+    background-color: #162033;
+}
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
@@ -19,7 +35,8 @@ header {visibility: hidden;}
 # BRANDING FIRMY
 # ======================================
 
-st.title("NutriStep - Mgr. Jaroslav Přidal")
+st.title("NutriStep – Řízené hubnutí s daty")
+st.subheader("NutriStep - Mgr. Jaroslav Přidal")
 
 st.markdown("""
 **Provozovatel:** NutriStep - Mgr. Jaroslav Přidal  
@@ -31,7 +48,12 @@ st.markdown("""
 
 st.caption(f"Aktuální datum: {datetime.now().strftime('%d.%m.%Y')}")
 
-st.write("Profesionální aplikace pro kalorické výpočty")
+st.markdown("""
+*Pomáhám lidem hubnout systematicky, bez extrémních diet a bez jojo efektu.  
+Každý plán vychází z individuálního výpočtu.*
+""")
+
+st.divider()
 
 # ======================================
 # Funkce BMR
@@ -47,8 +69,6 @@ def calculate_bmr(weight, height, age, gender):
 # ======================================
 # VSTUPY
 # ======================================
-
-st.divider()
 
 gender = st.selectbox("Pohlaví", ["Muž", "Žena"])
 age = st.number_input("Věk (roky)", 10, 100, 30)
@@ -152,16 +172,8 @@ if st.button("Spočítat kalorický plán"):
     predicted_weight_change = weekly_energy_change / 7700
     weekly_percent_weight_change = (predicted_weight_change / weight) * 100
 
-    # ======================================
-    # PROJEKCE
-    # ======================================
-
     change_4_weeks = predicted_weight_change * 4
     change_12_weeks = predicted_weight_change * 12
-
-    # ======================================
-    # VÝSTUP
-    # ======================================
 
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
@@ -179,13 +191,6 @@ if st.button("Spočítat kalorický plán"):
         st.write(f"Odhad za 4 týdny: {change_4_weeks:.2f} kg")
         st.write(f"Odhad za 12 týdnů: {change_12_weeks:.2f} kg")
 
-        if weekly_percent_weight_change <= 0.5:
-            st.success("Mírné a velmi udržitelné tempo.")
-        elif weekly_percent_weight_change <= 1:
-            st.success("Optimální tempo redukce.")
-        else:
-            st.warning("Rychlé tempo – zvažte úpravu pro dlouhodobou udržitelnost.")
-
     st.divider()
 
     st.subheader("Makroživiny")
@@ -199,14 +204,3 @@ if st.button("Spočítat kalorický plán"):
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
-
-    st.divider()
-
-    st.subheader("Motivační shrnutí")
-
-    st.markdown("""
-Tento plán představuje realistický a dlouhodobě udržitelný přístup.  
-Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu.
-
-Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
-""")

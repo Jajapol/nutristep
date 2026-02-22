@@ -234,6 +234,8 @@ Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu
 Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
 """)
 
+    st.info("Tato kalkulačka je orientační nástroj. Individuální plán zohledňuje zdravotní stav, historii diety a metabolickou adaptaci.")
+
 # ======================================
 # KONTAKTNÍ FORMULÁŘ
 # ======================================
@@ -282,3 +284,5 @@ Telefon: {phone}
 
         else:
             st.warning("Vyplňte prosím jméno a email.")
+
+st.caption("Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem kontaktování.")

@@ -152,22 +152,16 @@ if st.button("Spočítat kalorický plán"):
     predicted_weight_change = weekly_energy_change / 7700
     weekly_percent_weight_change = (predicted_weight_change / weight) * 100
 
-    if goal != "Udržování" and weekly_percent_weight_change > 1:
-        st.warning("Změna přesahuje 1 % tělesné hmotnosti týdně.")
+    # ======================================
+    # PROJEKCE
+    # ======================================
 
-    fat_kcal = target * 0.30
-    fat_g = fat_kcal / 9
+    change_4_weeks = predicted_weight_change * 4
+    change_12_weeks = predicted_weight_change * 12
 
-    protein_g = weight * protein_per_kg
-    protein_kcal = protein_g * 4
-
-    remaining_kcal = target - (fat_kcal + protein_kcal)
-
-    if remaining_kcal < 0:
-        st.error("Příliš vysoké množství bílkovin.")
-        st.stop()
-
-    carbs_g = remaining_kcal / 4
+    # ======================================
+    # VÝSTUP
+    # ======================================
 
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
@@ -182,48 +176,37 @@ if st.button("Spočítat kalorický plán"):
 
     if goal != "Udržování":
         st.write(f"Odhad změny hmotnosti: {predicted_weight_change:.2f} kg / týden")
-        st.write(f"{weekly_percent_weight_change:.2f} % tělesné hmotnosti týdně")
+        st.write(f"Odhad za 4 týdny: {change_4_weeks:.2f} kg")
+        st.write(f"Odhad za 12 týdnů: {change_12_weeks:.2f} kg")
+
+        if weekly_percent_weight_change <= 0.5:
+            st.success("Mírné a velmi udržitelné tempo.")
+        elif weekly_percent_weight_change <= 1:
+            st.success("Optimální tempo redukce.")
+        else:
+            st.warning("Rychlé tempo – zvažte úpravu pro dlouhodobou udržitelnost.")
 
     st.divider()
 
     st.subheader("Makroživiny")
+
+    fat_kcal = target * 0.30
+    fat_g = fat_kcal / 9
+    protein_g = weight * protein_per_kg
+    protein_kcal = protein_g * 4
+    carbs_g = (target - fat_kcal - protein_kcal) / 4
+
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
     st.write(f"Sacharidy: {carbs_g:.0f} g")
 
     st.divider()
 
-    st.subheader("Odborná analýza")
-
-    if goal != "Udržování":
-        percent_deficit = (adjustment / tdee) * 100 if tdee != 0 else 0
-        st.write(f"Procentuální změna: {percent_deficit:.1f} % z TDEE")
-
-        if percent_deficit <= 15:
-            st.success("Jedná se o mírnou a dlouhodobě udržitelnou redukci.")
-        elif percent_deficit <= 25:
-            st.warning("Jedná se o standardní redukční nastavení.")
-        else:
-            st.error("Jedná se o agresivní redukci – zvažte úpravu.")
-
-    st.divider()
-
-    st.subheader("Jak číst tento výsledek")
+    st.subheader("Motivační shrnutí")
 
     st.markdown("""
-**BMR (Bazální metabolismus)**  
-Energie potřebná pro základní životní funkce v klidu.
+Tento plán představuje realistický a dlouhodobě udržitelný přístup.  
+Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu.
 
-**TDEE (Celkový denní výdej energie)**  
-Součet BMR, fyzické aktivity a energie potřebné na trávení (TEF).
-
-**TEF (Thermic Effect of Food)**  
-Přibližně 10 % denního energetického výdeje.
-
-**Makroživiny**
-- Bílkoviny pomáhají udržet svalovou hmotu.
-- Tuky jsou fixně nastaveny na 30 %.
-- Sacharidy doplňují zbytek energie.
-
-Dlouhodobá redukce by neměla přesahovat 1 % tělesné hmotnosti týdně.
+Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
 """)

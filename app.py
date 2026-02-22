@@ -1,6 +1,8 @@
 import streamlit as st
 from datetime import datetime
 import os
+import smtplib
+from email.mime.text import MIMEText
 
 # ======================================
 # Nastavení stránky + vizuální styl
@@ -108,13 +110,14 @@ if activity_mode == "Paušální faktor aktivity":
     }
     selected_activity = st.selectbox("Faktor aktivity", list(activity_options.keys()))
     activity_factor = activity_options[selected_activity]
-    activity_daily = (bmr * activity_factor) - bmr
+    tdee_base = bmr * activity_factor
 else:
     weekly_active_calories = st.number_input(
         "Součet aktivních kalorií za 7 dní (kcal)",
         0.0, 30000.0, 2500.0
     )
     activity_daily = weekly_active_calories / 7
+    tdee_base = bmr + activity_daily
 
 st.divider()
 
@@ -140,10 +143,8 @@ st.divider()
 
 if st.button("Spočítat kalorický plán"):
 
-    # TDEE výpočet
-    tdee_base = bmr + activity_daily
-    tef_daily = tdee_base * 0.10
-    tdee = tdee_base + tef_daily
+    tef = tdee_base * 0.10
+    tdee = tdee_base + tef
 
     if goal == "Redukce":
         target = tdee - adjustment
@@ -168,8 +169,8 @@ if st.button("Spočítat kalorický plán"):
 
     st.subheader("Rozpad energetického výdeje")
     st.write(f"BMR: {bmr:.0f} kcal")
-    st.write(f"Aktivita: {activity_daily:.0f} kcal")
-    st.write(f"TEF (10 %): {tef_daily:.0f} kcal")
+    st.write(f"Výdej bez TEF: {tdee_base:.0f} kcal")
+    st.write(f"TEF (10 %): {tef:.0f} kcal")
     st.write(f"Celkový TDEE: {tdee:.0f} kcal")
 
     st.divider()
@@ -200,12 +201,8 @@ if st.button("Spočítat kalorický plán"):
 
     carbs_g = remaining_kcal / 4
 
-    # Cukry – max 10 % ze sacharidů
     sugar_max_g = carbs_g * 0.10
-
-    # NMK – max 10 % z celkového denního příjmu
-    saturated_fat_max_kcal = target * 0.10
-    saturated_fat_max_g = saturated_fat_max_kcal / 9
+    saturated_fat_max_g = (target * 0.10) / 9
 
     st.write(f"Bílkoviny: {protein_g:.0f} g")
     st.write(f"Tuky: {fat_g:.0f} g")
@@ -214,21 +211,19 @@ if st.button("Spočítat kalorický plán"):
     st.divider()
 
     st.write(f"Cukry (maximální hodnota): {sugar_max_g:.0f} g")
-    st.write(f"Nasycené mastné kyseliny (maximální hodnota – 10 % z celkového příjmu): {saturated_fat_max_g:.0f} g")
+    st.write(f"Nasycené mastné kyseliny (max 10 % z celkového příjmu): {saturated_fat_max_g:.0f} g")
     st.write("Vláknina: 25–35 g denně")
 
     st.divider()
 
     st.subheader("Motivační shrnutí")
-
     st.markdown("""
 Tento plán představuje realistický a dlouhodobě udržitelný přístup.  
 Klíčem k úspěchu je konzistence, pravidelnost a postupná adaptace organismu.  
-
 Pamatujte: malé kroky prováděné dlouhodobě vedou k velkým výsledkům.
 """)
 
-    st.info("Tato kalkulačka je orientační nástroj. Individuální plán zohledňuje zdravotní stav, historii diety a metabolickou adaptaci.")
+    st.info("Tato kalkulačka je orientační nástroj.")
 
 # ======================================
 # KONTAKTNÍ FORMULÁŘ
@@ -247,9 +242,6 @@ with st.form("contact_form"):
 
     if submitted:
         if name and email:
-            import smtplib
-            from email.mime.text import MIMEText
-
             try:
                 sender = st.secrets["EMAIL_ADDRESS"]
                 password = st.secrets["EMAIL_PASSWORD"]
@@ -279,7 +271,6 @@ Zpráva:
 
             except Exception:
                 st.error("Došlo k chybě při odesílání.")
-
         else:
             st.warning("Vyplňte prosím jméno a email.")
 
